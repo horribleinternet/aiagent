@@ -2,4 +2,5 @@ venv/
 __pycache__/
 .env
 lorem.txt
+startvenv.sh
 
