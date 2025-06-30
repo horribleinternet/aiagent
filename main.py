@@ -136,22 +136,30 @@ When a user asks a question or makes a request, make a function call plan. You c
 All paths you provide should be relative to the working directory. You do not need to specify the working directory in your function calls as it is automatically injected for security reasons.
 """
 
-response = client.models.generate_content(model='gemini-2.0-flash-001', contents=user_prompt,
-                                          config=types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt))
+for i in range(20):
+    response = client.models.generate_content(model='gemini-2.0-flash-001', contents=messages,
+                                            config=types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt))
 
-if verbose:
-    print(f"User prompt: {user_prompt}")
-    print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-    print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
-    print()
-
-print(response.text)
-
-for call in response.function_calls:
-    func_call = types.FunctionCall(name=call.name, args=call.args)
-    content = call_function(func_call, verbose)
-    if len(content.parts) == 0:
-        raise Exception("invalid function call response")
+    for candidate in response.candidates:
+        messages.append(candidate.content)
+    
     if verbose:
-        print(f"-> {content.parts[0].function_response.response}")
-    #print(f"Calling function: {call.name}({call.args})")
+        print(f"User prompt: {user_prompt}")
+        print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
+        print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+        print()
+
+    if len(response.function_calls) > 0:
+        for call in response.function_calls:
+            func_call = types.FunctionCall(name=call.name, args=call.args)
+            content = call_function(func_call, verbose)
+            messages.append(content)
+            if len(content.parts) == 0:
+                raise Exception("invalid function call response")
+            if verbose:
+                print(f"-> {content.parts[0].function_response.response}")
+    else:
+        print(response.text)
+        break
+
+
