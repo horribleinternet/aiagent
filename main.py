@@ -149,7 +149,7 @@ for i in range(20):
         print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
         print()
 
-    if len(response.function_calls) > 0:
+    if response.function_calls is not None:
         for call in response.function_calls:
             func_call = types.FunctionCall(name=call.name, args=call.args)
             content = call_function(func_call, verbose)
